@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e74c3c">
+    <meta name="description" content="今天吃什么？美食随机选择器">
+    <title>今天吃什么？</title>
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --dessert: #e84393;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-top: 0;
+        }
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .back-btn {
+            background-color: #95a5a6;
+        }
+        .random-btn {
+            background-color: var(--success);
+        }
+        .favorite-btn {
+            background-color: var(--primary);
+        }
+        .search-btn {
+            background-color: var(--dark);
+        }
+        .dessert-btn {
+            background-color: var(--dessert);
+        }
+        .other-btn {
+            background-color: #9b59b6;
+        }
+        .rating-btn {
+            background-color: #f39c12;
+        }
+        .review-btn {
+            background-color: #16a085;
+        }
+        #result {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 30px 0;
+            min-height: 60px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .food-type {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .search-container {
+            margin: 15px 0;
+            display: flex;
+        }
+        #search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            font-size: 16px;
+        }
+        #search-btn {
+            border-radius: 0 5px 5px 0;
+            padding: 10px 15px;
+        }
+        #search-results {
+            margin-top: 15px;
+        }
+        .search-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .search-item:hover {
+            background-color: #f5f5f5;
+        }
+        .favorites-container {
+            margin-top: 20px;
+        }
+        .favorite-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 12px;
+            background-color: var(--light);
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .install-btn {
+            background-color: var(--primary);
+            display: none;
+            margin: 10px auto;
+        }
+        .category-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .separator {
+            grid-column: 1 / -1;
+            border-top: 2px dashed #ddd;
+            margin: 10px 0;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .star-rating span {
+            font-size: 30px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .star-rating span:hover,
+        .star-rating span:hover ~ span {
+            color: #f5b301;
+        }
+        #review-text {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .dish-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+                margin: 3px;
+            }
+            .category-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            #result {
+                font-size: 28px;
+                padding: 15px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>今天吃什么？</h1>
+        
+        <button id="install-btn" class="install-btn">安装应用</button>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="搜索菜品...">
+            <button id="search-btn" class="search-btn">搜索</button>
+        </div>
+        
+        <div id="search-results"></div>
+        
+        <div class="tab-buttons">
+            <button id="main-menu-btn">主菜单</button>
+            <button id="favorites-btn">我的收藏</button>
+        </div>
+        
+        <div id="main-menu" class="active">
+            <p>请选择分类：</p>
+            <div class="category-buttons">
+                <!-- 主食分类 -->
+                <button data-type="chicken">🐔 鸡肉</button>
+                <button data-type="beef">🐮 牛肉</button>
+                <button data-type="pork">🐷 猪肉</button>
+                <button data-type="seafood">🦐 海鲜</button>
+                <button data-type="vegetable">🥦 素菜</button>
+                <button data-type="egg">🥚 鸡蛋</button>
+                <button data-type="other">🍽️ 其他</button>
+                <button data-type="all">🎲 全部随机</button>
+                
+                <!-- 分隔线 -->
+                <div class="separator"></div>
+                
+                <!-- 甜品分类（单独列出） -->
+                <button data-type="dessert" class="dessert-btn">🍰 甜品</button>
+            </div>
+        </div>
+        
+        <!-- 各分类页面 -->
+        <div id="favorites" class="food-type">
+            <h3>我的收藏</h3>
+            <div class="favorites-container" id="favorites-list"></div>
+            <button class="back-btn">← 返回</button>
+        </div>
+        
+        <div id="chicken" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>鸡肉类菜品：</p>
+            <button class="random-btn" data-type="chicken">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="beef" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>牛肉类菜品：</p>
+            <button class="random-btn" data-type="beef">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="pork" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>猪肉类菜品：</p>
+            <button class="random-btn" data-type="pork">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="seafood" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>海鲜类菜品：</p>
+            <button class="random-btn" data-type="seafood">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="vegetable" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>素菜类菜品：</p>
+            <button class="random-btn" data-type="vegetable">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="egg" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>蛋类菜品：</p>
+            <button class="random-btn" data-type="egg">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="other" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>其他菜品：</p>
+            <button class="random-btn" data-type="other">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="dessert" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>甜品：</p>
+            <button class="random-btn" data-type="dessert">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="all" class="food-type">
+            <button class="back-btn">← 返回</button>
+            <p>全部主餐随机：</p>
+            <button class="random-btn" data-type="all">换一个</button>
+            <button class="favorite-btn">❤️ 收藏</button>
+            <button class="rating-btn">⭐ 评分</button>
+            <button class="review-btn">✏️ 评价</button>
+            <div id="result"></div>
+            <div class="dish-info">
+                <p>评分: <span id="dish-rating">0</span>/5</p>
+                <h4>评价:</h4>
+                <ul id="dish-reviews">
+                    <li>暂无评价</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评分弹窗 -->
+    <div id="rating-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>为 <span id="modal-dish-name"></span> 评分</h2>
+            <div class="star-rating">
+                <span data-rating="1">&#9733;</span>
+                <span data-rating="2">&#9733;</span>
+                <span data-rating="3">&#9733;</span>
+                <span data-rating="4">&#9733;</span>
+                <span data-rating="5">&#9733;</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评价弹窗 -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>为 <span id="modal-dish-name-review"></span> 添加评价</h2>
+            <textarea id="review-text" placeholder="写下你的评价..."></textarea>
+            <button id="submit-review">提交</button>
+        </div>
+    </div>
+
+    <script>
+        // 菜品数据库（甜品单独列出）
+        const dishes = {
+            // 主餐分类
+            chicken: [
+                { name: "黄焖鸡米饭", rating: 0, reviews: [] },
+                { name: "泡菜鸡胸肉", rating: 0, reviews: [] },
+                { name: "辣子鸡", rating: 0, reviews: [] },
+                { name: "口水鸡", rating: 0, reviews: [] },
+                { name: "脆皮椒麻鸡排三明治", rating: 0, reviews: [] },
+                { name: "葱油手撕鸡", rating: 0, reviews: [] },
+                { name: "日式黄油咖喱鸡", rating: 0, reviews: [] },
+                { name: "名古屋鸡翅", rating: 0, reviews: [] },
+                { name: "鸡公煲", rating: 0, reviews: [] },
+                { name: "葱油鸡盖饭", rating: 0, reviews: [] },
+            ],
+            beef: [
+                { name: "牛肉滑蛋", rating: 0, reviews: [] },
+                { name: "黑椒牛柳", rating: 0, reviews: [] },
+                { name: "番茄牛腩", rating: 0, reviews: [] },
+                { name: "水煮牛肉", rating: 0, reviews: [] },
+                { name: "勃艮第炖牛肉", rating: 0, reviews: [] },
+                { name: "炒牛肉刀削面", rating: 0, reviews: [] },
+            ],
+            pork: [
+                { name: "台式卤肉饭", rating: 0, reviews: [] },
+                { name: "红烧排骨", rating: 0, reviews: [] },
+                { name: "回锅肉", rating: 0, reviews: [] },
+                { name: "腊味煲仔饭", rating: 0, reviews: [] },
+                { name: "梅菜扣肉", rating: 0, reviews: [] },
+                { name: "福鼎肉片", rating: 0, reviews: [] },
+            ],
+            seafood: [
+                { name: "海蛎煎", rating: 0, reviews: [] },
+                { name: "麻辣小龙虾", rating: 0, reviews: [] },
+                { name: "鱼肉馄饨", rating: 0, reviews: [] },
+                { name: "米村鱿鱼", rating: 0, reviews: [] },
+                { name: "咸蛋虾仁粥", rating: 0, reviews: [] },
+                { name: "葱油蛏子", rating: 0, reviews: [] },
+            ],
+            vegetable: [
+                { name: "麻婆豆腐", rating: 0, reviews: [] },
+                { name: "泡菜臭豆腐", rating: 0, reviews: [] },
+                { name: "地三鲜", rating: 0, reviews: [] },
+                { name: "鱼香茄子", rating: 0, reviews: [] },
+                { name: "茄子焖面", rating: 0, reviews: [] },
+                { name: "干锅花菜", rating: 0, reviews: [] },
+            ],
+            egg: [
+                { name: "米村鸡蛋拌饭", rating: 0, reviews: [] },
+                { name: "班尼迪克蛋三明治", rating: 0, reviews: [] },
+                { name: "西班牙烘蛋", rating: 0, reviews: [] },
+                { name: "紫菜蛋炒饭", rating: 0, reviews: [] },
+                { name: "可乐鸡蛋拌饭", rating: 0, reviews: [] },
+                { name: "醋炒蛋", rating: 0, reviews: [] },
+            ],
+            other: [
+                { name: "酸菜烧鸭", rating: 0, reviews: [] },
+                { name: "新疆炒米粉", rating: 0, reviews: [] },
+                { name: "麻辣豆花", rating: 0, reviews: [] },
+                { name: "寿司", rating: 0, reviews: [] },
+                { name: "重庆小面", rating: 0, reviews: [] },
+                { name: "蒜油面条", rating: 0, reviews: [] },
+            ],
+            // 甜品分类
+            dessert: [
+                { name: "提拉米苏", rating: 0, reviews: [] },
+                { name: "南瓜羹", rating: 0, reviews: [] },
+                { name: "黑巧豆腐冰淇凌", rating: 0, reviews: [] },
+                { name: "大米牛奶蛋糕", rating: 0, reviews: [] },
+                { name: "双皮奶", rating: 0, reviews: [] },
+                { name: "杨枝甘露", rating: 0, reviews: [] },
+            ]
+        };
+
+        // 主餐分类列表（不包含甜品）
+        const mainCategories = ['chicken', 'beef', 'pork', 'seafood', 'vegetable', 'egg', 'other'];
+
+        // 当前选中的菜品和分类
+        let currentDish = null;
+        let currentDishCategory = '';
+        let currentRating = 0;
+        
+        // 收藏列表
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        
+        // 加载保存的菜品数据
+        const savedDishes = localStorage.getItem('dishData');
+        if (savedDishes) {
+            const parsedDishes = JSON.parse(savedDishes);
+            for (const category in parsedDishes) {
+                if (dishes[category]) {
+                    dishes[category] = parsedDishes[category];
+                }
+            }
+        }
+
+        // DOM元素
+        const searchBtn = document.getElementById('search-btn');
+        const searchInput = document.getElementById('search-input');
+        const mainMenuBtn = document.getElementById('main-menu-btn');
+        const favoritesBtn = document.getElementById('favorites-btn');
+        const backBtns = document.querySelectorAll('.back-btn');
+        const categoryBtns = document.querySelectorAll('.category-buttons button');
+        const randomBtns = document.querySelectorAll('.random-btn');
+        const favoriteBtns = document.querySelectorAll('.favorite-btn');
+        const ratingBtns = document.querySelectorAll('.rating-btn');
+        const reviewBtns = document.querySelectorAll('.review-btn');
+        const ratingModal = document.getElementById('rating-modal');
+        const reviewModal = document.getElementById('review-modal');
+        const closeRatingModalBtn = ratingModal.querySelector('.close');
+        const closeReviewModalBtn = reviewModal.querySelector('.close');
+        const starRating = document.querySelectorAll('.star-rating span');
+        const submitReviewBtn = document.getElementById('submit-review');
+
+        // 初始化
+        function init() {
+            updateFavoritesList();
+            setupEventListeners();
+            setupPWA();
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            // 主菜单和收藏按钮
+            mainMenuBtn.addEventListener('click', () => showTab('main-menu'));
+            favoritesBtn.addEventListener('click', () => showTab('favorites'));
+            
+            // 返回按钮
+            backBtns.forEach(btn => {
+                btn.addEventListener('click', () => showTab('main-menu'));
+            });
+            
+            // 分类按钮
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.getAttribute('data-type');
+                    showFoodTypeAndRandom(type);
+                });
+            });
+            
+            // 随机选择按钮
+            randomBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.getAttribute('data-type');
+                    randomDish(type);
+                });
+            });
+            
+            // 收藏按钮
+            favoriteBtns.forEach(btn => {
+                btn.addEventListener('click', addToFavorites);
+            });
+            
+            // 评分按钮
+            ratingBtns.forEach(btn => {
+                btn.addEventListener('click', openRatingModal);
+            });
+            
+            // 评价按钮
+            reviewBtns.forEach(btn => {
+                btn.addEventListener('click', openReviewModal);
+            });
+            
+            // 搜索功能
+            searchBtn.addEventListener('click', searchDishes);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchDishes();
+            });
+            
+            // 评分弹窗
+            closeRatingModalBtn.addEventListener('click', closeRatingModal);
+            starRating.forEach(star => {
+                star.addEventListener('click', (e) => {
+                    const rating = parseInt(e.target.getAttribute('data-rating'));
+                    setRating(rating);
+                });
+            });
+            
+            // 评价弹窗
+            closeReviewModalBtn.addEventListener('click', closeReviewModal);
+            submitReviewBtn.addEventListener('click', addReview);
+        }
+
+        // 显示对应的标签页
+        function showTab(tabId) {
+            document.querySelectorAll('.food-type').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('search-input').value = '';
+        }
+
+        // 显示对应的食材分类并随机选择一道菜
+        function showFoodTypeAndRandom(type) {
+            showTab(type);
+            randomDish(type);
+        }
+
+        // 清空结果
+        function clearResult() {
+            document.querySelectorAll('#result').forEach(el => {
+                el.textContent = '';
+            });
+        }
+
+        // 随机选择菜品
+        function randomDish(type) {
+            let dishPool = [];
+            
+            if (type === 'all') {
+                // 只包含主餐分类，不包含甜品
+                mainCategories.forEach(category => {
+                    dishes[category].forEach(dish => {
+                        dishPool.push({ name: dish.name, category: category });
+                    });
+                });
+            } else {
+                dishPool = dishes[type].map(d => ({ name: d.name, category: type }));
+            }
+            
+            if (dishPool.length === 0) return;
+            
+            const randomIndex = Math.floor(Math.random() * dishPool.length);
+            const selectedDish = dishPool[randomIndex];
+            currentDish = selectedDish.name;
+            currentDishCategory = selectedDish.category;
+            displayResult(selectedDish.name);
+            updateCurrentDish(selectedDish.name, selectedDish.category);
+        }
+
+        // 显示结果（带打字机动画）
+        function displayResult(dish) {
+            const activeTab = document.querySelector('.food-type.active');
+            if (!activeTab) return;
+            
+            const resultElement = activeTab.querySelector('#result');
+            if (!resultElement) return;
+            
+            resultElement.textContent = '';
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < dish.length) {
+                    resultElement.textContent += dish.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        // 更新当前菜品信息
+        function updateCurrentDish(dishName, category) {
+            currentDish = dishName;
+            currentDishCategory = category;
+            const dishData = dishes[category].find(d => d.name === dishName);
+            if (dishData) {
+                const activeTab = document.querySelector('.food-type.active');
+                if (activeTab) {
+                    activeTab.querySelector('#dish-rating').textContent = dishData.rating;
+                    displayReviews(dishData.reviews, activeTab);
+                }
+            }
+        }
+
+        // 显示评价列表
+        function displayReviews(reviews, container) {
+            const reviewsList = container.querySelector('#dish-reviews');
+            reviewsList.innerHTML = '';
+            
+            if (reviews && reviews.length > 0) {
+                reviews.forEach(review => {
+                    const li = document.createElement('li');
+                    li.textContent = review;
+                    reviewsList.appendChild(li);
+                });
+            } else {
+                reviewsList.innerHTML = '<li>暂无评价</li>';
+            }
+        }
+
+        // 添加到收藏
+        function addToFavorites() {
+            if (!currentDish) return;
+            
+            if (!favorites.includes(currentDish)) {
+                favorites.push(currentDish);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoritesList();
+                alert(`已收藏: ${currentDish}`);
+            } else {
+                alert(`${currentDish} 已收藏！`);
+            }
+        }
+
+        // 更新收藏列表
+        function updateFavoritesList() {
+            const favoritesList = document.getElementById('favorites-list');
+            favoritesList.innerHTML = favorites.length ? 
+                favorites.map((dish, index) => ` 
+                    <div class="favorite-item">
+                        ${dish}
+                        <span onclick="removeFromFavorites(${index})" style="cursor:pointer"> ❌</span>
+                    </div>
+                `).join('') : 
+                '<p>暂无收藏</p>';
+        }
+
+        // 从收藏中移除
+        function removeFromFavorites(index) {
+            if (confirm(`删除 ${favorites[index]}？`) ) {
+                favorites.splice(index, 1);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoritesList();
+            }
+        }
+
+        // 根据菜品名称获取分类
+        function getCategoryByDish(dishName) {
+            for (const category in dishes) {
+                if (dishes[category].some(d => d.name === dishName)) {
+                    return category;
+                }
+            }
+            return null;
+        }
+
+        // 搜索功能（包含所有分类）
+        function searchDishes() {
+            const query = searchInput.value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+            
+            if (!query) return;
+            
+            const matchedDishes = [];
+            for (const category in dishes) {
+                dishes[category].forEach(dish => {
+                    if (dish.name.toLowerCase().includes(query)) {
+                        matchedDishes.push(dish);
+                    }
+                });
+            }
+            
+            if (matchedDishes.length === 0) {
+                resultsContainer.innerHTML = '<p>没有找到匹配的菜品</p>';
+                return;
+            }
+            
+            matchedDishes.forEach(dish => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                item.textContent = dish.name;
+                item.addEventListener('click', () => {
+                    currentDish = dish.name;
+                    currentDishCategory = getCategoryByDish(dish.name);
+                    displayResult(dish.name);
+                    updateCurrentDish(dish.name, currentDishCategory);
+                    resultsContainer.innerHTML = '';
+                });
+                resultsContainer.appendChild(item);
+            });
+        }
+
+        // 评分功能
+        function openRatingModal() {
+            if (!currentDish) return;
+            
+            document.getElementById('modal-dish-name').textContent = currentDish;
+            currentRating = 0;
+            starRating.forEach(span => {
+                span.style.color = '#ccc';
+            });
+            ratingModal.style.display = 'block';
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            starRating.forEach((span, index) => {
+                if (index < rating) {
+                    span.style.color = '#f5b301';
+                } else {
+                    span.style.color = '#ccc';
+                }
+            });
+        }
+
+        function closeRatingModal() {
+            ratingModal.style.display = 'none';
+            if (currentRating > 0) {
+                updateDishRating(currentRating);
+            }
+        }
+
+        function updateDishRating(rating) {
+            const dish = dishes[currentDishCategory].find(d => d.name === currentDish);
+            if (dish) {
+                dish.rating = rating;
+                localStorage.setItem('dishData', JSON.stringify(dishes));
+                
+                const activeTab = document.querySelector('.food-type.active');
+                if (activeTab) {
+                    activeTab.querySelector('#dish-rating').textContent = rating;
+                }
+            }
+        }
+
+        // 评价功能
+        function openReviewModal() {
+            if (!currentDish) return;
+            
+            document.getElementById('modal-dish-name-review').textContent = currentDish;
+            document.getElementById('review-text').value = '';
+            reviewModal.style.display = 'block';
+        }
+
+        function addReview() {
+            const reviewText = document.getElementById('review-text').value.trim();
+            if (reviewText === '') {
+                alert('评价内容不能为空！');
+                return;
+            }
+            
+            const dish = dishes[currentDishCategory].find(d => d.name === currentDish);
+            if (dish) {
+                dish.reviews.push(reviewText);
+                localStorage.setItem('dishData', JSON.stringify(dishes));
+                
+                const activeTab = document.querySelector('.food-type.active');
+                if (activeTab) {
+                    displayReviews(dish.reviews, activeTab);
+                }
+            }
+            reviewModal.style.display = 'none';
+        }
+
+        function closeReviewModal() {
+            reviewModal.style.display = 'none';
+        }
+
+        // PWA安装功能
+        function setupPWA() {
+            const installBtn = document.getElementById('install-btn');
+            let deferredPrompt;
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installBtn.style.display = 'block';
+            });
+            
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                }
+            });
+            
+            window.addEventListener('appinstalled', () => {
+                installBtn.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
+
+        // 初始化应用
+        window.onload = init;
+        
+        // 全局函数
+        window.removeFromFavorites = removeFromFavorites;
+    </script>
+</body>
+</html>
